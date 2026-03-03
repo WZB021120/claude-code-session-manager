@@ -488,17 +488,42 @@ function App() {
                       <span className="flex items-center gap-1"><MessageSquare className="w-3.5 h-3.5" /> {selectedSession.message_count} 条消息</span>
                     </div>
                     {/* 完整 Session ID + 复制 + resume 提示 */}
-                    <div className="mt-2 flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
-                      <span className="text-xs text-slate-500 flex-shrink-0">Session ID:</span>
-                      <code className="text-xs font-mono text-slate-700 select-all break-all">{selectedSession.id}</code>
-                      <button
-                        onClick={() => { navigator.clipboard.writeText(selectedSession.id); }}
-                        className="flex-shrink-0 px-2 py-0.5 text-xs bg-blue-50 text-blue-600 border border-blue-200 rounded hover:bg-blue-100 cursor-pointer transition-colors"
-                        title="复制 Session ID"
-                      >复制</button>
-                    </div>
-                    <div className="mt-1 text-xs text-slate-400">
-                      💡 恢复此会话: <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 select-all">claude --resume {selectedSession.id}</code>
+                    <div className="mt-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-500 flex-shrink-0">Session ID:</span>
+                        <code className="text-xs font-mono text-slate-700 select-all break-all">{selectedSession.id}</code>
+                        <button
+                          onClick={() => { navigator.clipboard.writeText(selectedSession.id); }}
+                          className="flex-shrink-0 px-2 py-0.5 text-xs bg-blue-50 text-blue-600 border border-blue-200 rounded hover:bg-blue-100 cursor-pointer transition-colors"
+                          title="复制 Session ID"
+                        >复制</button>
+                      </div>
+                      {selectedSession.project_path && selectedSession.project_path !== selectedSession.project && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-500 flex-shrink-0">项目路径:</span>
+                          <code className="text-xs font-mono text-slate-600 truncate" title={selectedSession.project_path}>{selectedSession.project_path}</code>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2 pt-1 border-t border-slate-200">
+                        <span className="text-xs text-slate-400">💡 恢复此会话:</span>
+                        <button
+                          onClick={() => {
+                            const pp = selectedSession.project_path && selectedSession.project_path !== selectedSession.project
+                              ? selectedSession.project_path : null
+                            const cmd = pp
+                              ? `cd "${pp}" && claude --resume ${selectedSession.id}`
+                              : `claude --resume ${selectedSession.id}`
+                            navigator.clipboard.writeText(cmd)
+                          }}
+                          className="flex-shrink-0 px-2 py-0.5 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 rounded hover:bg-emerald-100 cursor-pointer transition-colors"
+                        >📋 复制 resume 命令</button>
+                      </div>
+                      <code className="block text-xs font-mono text-slate-600 bg-slate-100 px-2 py-1 rounded select-all break-all">
+                        {selectedSession.project_path && selectedSession.project_path !== selectedSession.project
+                          ? `cd "${selectedSession.project_path}" && claude --resume ${selectedSession.id}`
+                          : `claude --resume ${selectedSession.id}`
+                        }
+                      </code>
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5 mt-3">
                       {selectedSession.tags?.map(tag => (

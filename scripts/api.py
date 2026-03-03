@@ -276,6 +276,17 @@ def load_session_messages(sid):
                 continue
     return messages
 
+def decode_project_path(encoded_name):
+    """将编码的项目目录名还原为原始路径。Claude Code 将 / 替换为 -"""
+    if not encoded_name:
+        return ""
+    # 编码格式: -Users-wzb-Desktop-myproject -> /Users/wzb/Desktop/myproject
+    path = encoded_name.replace("-", "/")
+    # 验证路径是否存在，若不存在就返回原样
+    if os.path.isdir(path):
+        return path
+    return encoded_name
+
 def format_session_info(sid, session_data, meta):
     """格式化会话信息"""
     session_meta = meta.get(sid, {"tags": [], "note": ""})
@@ -326,13 +337,15 @@ def format_session_info(sid, session_data, meta):
     except Exception:
         pass
 
+    project_encoded = session_data.get("project", "")
     return {
         "id": sid,
         "title": title,
         "created_at": session_data.get("timestamp", ""),
         "updated_at": last_timestamp,
         "message_count": message_count,
-        "project": session_data.get("project", ""),
+        "project": project_encoded,
+        "project_path": decode_project_path(project_encoded),
         "tags": session_meta.get("tags", []),
         "note": session_meta.get("note", "")
     }
