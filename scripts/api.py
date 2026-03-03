@@ -276,16 +276,23 @@ def load_session_messages(sid):
                 continue
     return messages
 
-def decode_project_path(encoded_name):
-    """将编码的项目目录名还原为原始路径。Claude Code 将 / 替换为 -"""
-    if not encoded_name:
-        return ""
-    # 编码格式: -Users-wzb-Desktop-myproject -> /Users/wzb/Desktop/myproject
-    path = encoded_name.replace("-", "/")
-    # 验证路径是否存在，若不存在就返回原样
-    if os.path.isdir(path):
-        return path
-    return encoded_name
+def extract_cwd_from_session(session_file_path):
+    """从 JSONL 文件的 progress 记录中提取真实的 cwd 路径"""
+    try:
+        with open(session_file_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    record = json.loads(line)
+                    if record.get("type") == "progress" and "cwd" in record:
+                        return record["cwd"]
+                except json.JSONDecodeError:
+                    continue
+    except Exception:
+        pass
+    return ""
 
 def format_session_info(sid, session_data, meta):
     """格式化会话信息"""
@@ -338,6 +345,7 @@ def format_session_info(sid, session_data, meta):
         pass
 
     project_encoded = session_data.get("project", "")
+    project_path = extract_cwd_from_session(session_data.get("file", ""))
     return {
         "id": sid,
         "title": title,
@@ -345,7 +353,7 @@ def format_session_info(sid, session_data, meta):
         "updated_at": last_timestamp,
         "message_count": message_count,
         "project": project_encoded,
-        "project_path": decode_project_path(project_encoded),
+        "project_path": project_path,
         "tags": session_meta.get("tags", []),
         "note": session_meta.get("note", "")
     }
