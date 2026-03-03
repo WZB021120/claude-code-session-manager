@@ -399,8 +399,8 @@ function App() {
                   {filteredSessions.map(session => (
                     <div key={session.id}
                       className={`group rounded-xl p-4 border transition-all cursor-pointer ${selectedIds.has(session.id)
-                          ? 'bg-blue-50 border-blue-300 shadow-sm shadow-blue-100'
-                          : 'bg-white border-slate-150 hover:border-blue-200 hover:shadow-md hover:shadow-blue-50'
+                        ? 'bg-blue-50 border-blue-300 shadow-sm shadow-blue-100'
+                        : 'bg-white border-slate-150 hover:border-blue-200 hover:shadow-md hover:shadow-blue-50'
                         }`}
                       onClick={() => handleSelectSession(session)}>
                       <div className="flex items-start gap-3">
@@ -486,7 +486,19 @@ function App() {
                       <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {formatTime(selectedSession.created_at)}</span>
                       <span className="flex items-center gap-1"><FolderOpen className="w-3.5 h-3.5" /> {formatProject(selectedSession.project)}</span>
                       <span className="flex items-center gap-1"><MessageSquare className="w-3.5 h-3.5" /> {selectedSession.message_count} 条消息</span>
-                      <span className="font-mono text-slate-400" title={selectedSession.id}>ID: {selectedSession.id?.slice(0, 8)}</span>
+                    </div>
+                    {/* 完整 Session ID + 复制 + resume 提示 */}
+                    <div className="mt-2 flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+                      <span className="text-xs text-slate-500 flex-shrink-0">Session ID:</span>
+                      <code className="text-xs font-mono text-slate-700 select-all break-all">{selectedSession.id}</code>
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(selectedSession.id); }}
+                        className="flex-shrink-0 px-2 py-0.5 text-xs bg-blue-50 text-blue-600 border border-blue-200 rounded hover:bg-blue-100 cursor-pointer transition-colors"
+                        title="复制 Session ID"
+                      >复制</button>
+                    </div>
+                    <div className="mt-1 text-xs text-slate-400">
+                      💡 恢复此会话: <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 select-all">claude --resume {selectedSession.id}</code>
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5 mt-3">
                       {selectedSession.tags?.map(tag => (

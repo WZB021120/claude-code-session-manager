@@ -215,6 +215,19 @@ def parse_content_blocks(raw_content):
     return blocks
 
 
+def infer_display_role(record_type, blocks):
+    """
+    推断前端显示角色。
+    规则：
+    1. 以顶层 record.type 为准，避免被 message.role 污染。
+    2. user + 纯 tool_result 记录属于工具回传，展示到 Claude 侧，避免误判为用户发言。
+    """
+    role = record_type if record_type in ("user", "assistant") else "assistant"
+    if role == "user" and blocks and all(b.get("type") == "tool_result" for b in blocks):
+        return "assistant"
+    return role
+
+
 def load_session_messages(sid):
     """加载会话的所有消息，返回结构化内容块"""
     session_file = get_session_file(sid)
@@ -236,11 +249,11 @@ def load_session_messages(sid):
                     continue
 
                 msg = record.get("message", {})
-                role = msg.get("role", record_type)
                 raw_content = msg.get("content", "")
 
                 # 解析为结构化内容块
                 blocks = parse_content_blocks(raw_content)
+                role = infer_display_role(record_type, blocks)
 
                 # 过滤掉系统命令消息（仅对纯文本用户消息）
                 if role == "user" and len(blocks) == 1 and blocks[0]["type"] == "text":
